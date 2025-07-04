@@ -145,7 +145,7 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
 
           {/* QR Code */}
           <div className="flex justify-center mb-4">
-            <img src="src/Images/scanner.png" alt="QR Code" className="w-40 h-40 rounded-lg" />
+            <img src="/scanner.png" alt="QR Code" className="w-40 h-40 rounded-lg" />
           </div>
           <p className="text-center text-sm text-gray-400 mb-4">Scan with any UPI app to pay</p>
 
