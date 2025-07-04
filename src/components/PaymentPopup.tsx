@@ -34,10 +34,12 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
     if (!transactionId.trim()) return;
     setIsSubmitting(true);
 
-    const trimmedId = transactionId.trim();
+    const normalizedId = transactionId.trim().toLowerCase();
 
     try {
-      const { data: existing } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payments?transactionId=${trimmedId}`);
+      const { data: existing } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payments?transactionId=${normalizedId}`);
+      console.log("🔍 API Response for duplicate check:", existing);
+
       if (existing.length > 0) {
         alert('❌ Transaction ID already used.');
         setIsSubmitting(false);
@@ -52,7 +54,7 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
         plan: selectedPlan.name,
         storage: selectedPlan.storage,
         price: selectedPlan.price,
-        transactionId: trimmedId,
+        transactionId: normalizedId,
         timestamp: new Date().toISOString()
       };
 
@@ -76,7 +78,7 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: true,
+                hour12: true
               })
             }
           ],
@@ -92,7 +94,7 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
       setSuccessData({
         plan: selectedPlan.name,
         amount: selectedPlan.price,
-        transactionId: trimmedId
+        transactionId: normalizedId
       });
 
       setTransactionId('');
@@ -112,6 +114,7 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
 
   return (
     <>
+      {/* Overlay */}
       <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8">
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto relative border border-gray-700 text-white p-6 sm:p-8">
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition">
@@ -162,7 +165,7 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
             </button>
           </div>
 
-          {/* Transaction ID Input */}
+          {/* Transaction Input */}
           <input
             type="text"
             placeholder="Enter transaction ID"
@@ -171,13 +174,12 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
             className="w-full px-4 py-2 mb-4 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
           />
 
-          {/* Confirm Button */}
           <button
             onClick={handleConfirmPayment}
             disabled={!transactionId.trim() || isSubmitting}
             className="w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Processing...' : 'Confirm Payment'}
+            {isSubmitting ? 'Processing…' : 'Confirm Payment'}
           </button>
         </div>
       </div>

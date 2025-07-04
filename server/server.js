@@ -7,22 +7,22 @@ import { fileURLToPath } from "url";
 const app = express();
 const PORT = process.env.PORT || 3500;
 
-// Setup __dirname for ES module
+// __dirname support for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to db.json
+// Paths
 const dbPath = path.join(__dirname, "../db.json");
+const distPath = path.join(__dirname, "../dist");
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve static files from frontend (dist)
-const distPath = path.join(__dirname, "../dist");
 app.use(express.static(distPath));
 
-// ---------- Reviews Utilities ----------
+// ---------- Utility Functions ----------
+
+// Reviews
 const getReviews = async () => {
   const data = await fs.readFile(dbPath, "utf-8");
   return JSON.parse(data).reviews || [];
@@ -35,7 +35,7 @@ const saveReviews = async (reviews) => {
   await fs.writeFile(dbPath, JSON.stringify(json, null, 2), "utf-8");
 };
 
-// ---------- Payments Utilities ----------
+// Payments
 const getPayments = async () => {
   const data = await fs.readFile(dbPath, "utf-8");
   return JSON.parse(data).payments || [];
@@ -49,6 +49,7 @@ const savePayments = async (payments) => {
 };
 
 // ---------- Reviews API ----------
+
 app.get("/api/reviews", async (req, res) => {
   try {
     const reviews = await getReviews();
@@ -71,6 +72,7 @@ app.post("/api/reviews", async (req, res) => {
 });
 
 // ---------- Payments API ----------
+
 app.get("/payments", async (req, res) => {
   try {
     const { transactionId } = req.query;
@@ -78,8 +80,11 @@ app.get("/payments", async (req, res) => {
       return res.status(400).json({ error: "Missing transactionId" });
     }
 
+    const normalized = transactionId.trim().toLowerCase();
     const payments = await getPayments();
-    const match = payments.filter((p) => p.transactionId === transactionId);
+    const match = payments.filter(
+      (p) => (p.transactionId || "").trim().toLowerCase() === normalized
+    );
 
     res.json(match);
   } catch (err) {
@@ -91,17 +96,25 @@ app.get("/payments", async (req, res) => {
 app.post("/payments", async (req, res) => {
   try {
     const newPayment = req.body;
+    newPayment.transactionId = (newPayment.transactionId || "")
+      .trim()
+      .toLowerCase();
+
     const payments = await getPayments();
     payments.push(newPayment);
     await savePayments(payments);
+
     res.status(201).json(newPayment);
+    console.log("🧾 Checking transactionId:", transactionId);
+    console.log("🧾 Normalized:", normalized);
+    console.log("🧾 Matching entries:", match);
   } catch (err) {
     console.error("Error saving payment:", err);
     res.status(500).json({ error: "Failed to save payment" });
   }
 });
 
-// ---------- SPA Fallback ----------
+// ---------- Fallback for SPA ----------
 app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });

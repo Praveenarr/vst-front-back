@@ -54,8 +54,8 @@ const SuccessPopup: React.FC<Props> = ({ plan, amount, transactionId, onClose })
   <div className="text-sm text-gray-400 mb-1">Amount Paid:</div>
   <div className="text-green-400 text-sm font-semibold mb-2">{amount}</div>
 
-  {/* <div className="text-sm text-gray-400 mb-1">Transaction ID:</div>
-  <div className="text-white text-sm break-all max-w-full">{transactionId}</div> */}
+  <div className="text-sm text-gray-400 mb-1">Transaction ID:</div>
+  <div className="text-white text-sm break-all max-w-full">{transactionId}</div>
 </div>
 
 
