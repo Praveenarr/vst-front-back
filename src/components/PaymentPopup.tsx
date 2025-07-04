@@ -18,20 +18,26 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
   const [transactionId, setTransactionId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successData, setSuccessData] = useState({
+    plan: '',
+    amount: '',
+    transactionId: ''
+  });
+
   const upiId = 'vstuniverse@paytm';
 
   const handleCopy = () => {
     navigator.clipboard.writeText(upiId);
-    // alert('UPI ID copied!');
   };
 
   const handleConfirmPayment = async () => {
     if (!transactionId.trim()) return;
     setIsSubmitting(true);
 
+    const trimmedId = transactionId.trim();
+
     try {
-      // Check for duplicate transaction ID
-      const { data: existing } = await axios.get(`http://localhost:3500/payments?transactionId=${transactionId.trim()}`);
+      const { data: existing } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payments?transactionId=${trimmedId}`);
       if (existing.length > 0) {
         alert('❌ Transaction ID already used.');
         setIsSubmitting(false);
@@ -46,18 +52,17 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
         plan: selectedPlan.name,
         storage: selectedPlan.storage,
         price: selectedPlan.price,
-        transactionId: transactionId.trim(),
+        transactionId: trimmedId,
         timestamp: new Date().toISOString()
       };
 
-      await axios.post('http://localhost:3500/payments', paymentData);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/payments`, paymentData);
 
-      // ✅ Send email using EmailJS
       await emailjs.send(
-        'service_6m2vzqc',      // Replace with your actual EmailJS service ID
-        'template_1n93yzk',     // Replace with your actual EmailJS template ID
+        'service_6m2vzqc',
+        'template_1n93yzk',
         {
-          email: email,
+          email,
           order_id: orderId,
           orders: [
             {
@@ -81,11 +86,17 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
             total: cleanedPrice
           }
         },
-        'eWJJPMNBSDMXW2WPK'        // Replace with your actual EmailJS public key
+        'eWJJPMNBSDMXW2WPK'
       );
 
+      setSuccessData({
+        plan: selectedPlan.name,
+        amount: selectedPlan.price,
+        transactionId: trimmedId
+      });
+
       setTransactionId('');
-      setShowSuccessPopup(true); // Show success popup
+      setShowSuccessPopup(true);
     } catch (err) {
       console.error('Payment or email failed:', err);
       alert('Something went wrong. Please try again.');
@@ -96,23 +107,17 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
 
   const handleCloseSuccess = () => {
     setShowSuccessPopup(false);
-    onClose(); // close payment popup after success
+    onClose();
   };
 
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8">
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto relative border border-gray-700 text-white p-6 sm:p-8">
-
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
-          >
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition">
             <X className="w-5 h-5" />
           </button>
 
-          {/* Header */}
           <div className="flex flex-col items-center mb-6 mt-2">
             <div className="bg-yellow-400 p-2 rounded-full mb-2">
               <CreditCard className="w-6 h-6 text-black" />
@@ -178,11 +183,14 @@ const PaymentPopup: React.FC<PaymentPopupProps> = ({ onClose, email, selectedPla
       </div>
 
       {/* Success Popup */}
-      {showSuccessPopup && <SuccessPopup     onClose={handleCloseSuccess}
-    plan={selectedPlan.name}
-    amount={selectedPlan.price}
-    transactionId={transactionId}
- />}
+      {showSuccessPopup && (
+        <SuccessPopup
+          onClose={handleCloseSuccess}
+          plan={successData.plan}
+          amount={successData.amount}
+          transactionId={successData.transactionId}
+        />
+      )}
     </>
   );
 };
