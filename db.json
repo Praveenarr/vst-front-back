@@ -84,5 +84,15 @@
       "rating": 5,
       "timestamp": "2025-07-04T10:04:35.727Z"
     }
+  ],
+  "payments": [
+    {
+      "email": "Prawinlr@gmail.com",
+      "plan": "Ultimate Pack",
+      "storage": "8TB",
+      "price": "₹ 63,999",
+      "transactionId": "vstuniversesdssd@paytm",
+      "timestamp": "2025-07-04T10:23:49.301Z"
+    }
   ]
 }

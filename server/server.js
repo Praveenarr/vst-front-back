@@ -22,19 +22,33 @@ app.use(express.json());
 const distPath = path.join(__dirname, "../dist");
 app.use(express.static(distPath));
 
-// Read reviews from db.json
+// ---------- Reviews Utilities ----------
 const getReviews = async () => {
   const data = await fs.readFile(dbPath, "utf-8");
   return JSON.parse(data).reviews || [];
 };
 
-// Write reviews to db.json
 const saveReviews = async (reviews) => {
-  const data = JSON.stringify({ reviews }, null, 2);
-  await fs.writeFile(dbPath, data, "utf-8");
+  const data = await fs.readFile(dbPath, "utf-8");
+  const json = JSON.parse(data);
+  json.reviews = reviews;
+  await fs.writeFile(dbPath, JSON.stringify(json, null, 2), "utf-8");
 };
 
-// API routes
+// ---------- Payments Utilities ----------
+const getPayments = async () => {
+  const data = await fs.readFile(dbPath, "utf-8");
+  return JSON.parse(data).payments || [];
+};
+
+const savePayments = async (payments) => {
+  const data = await fs.readFile(dbPath, "utf-8");
+  const json = JSON.parse(data);
+  json.payments = payments;
+  await fs.writeFile(dbPath, JSON.stringify(json, null, 2), "utf-8");
+};
+
+// ---------- Reviews API ----------
 app.get("/api/reviews", async (req, res) => {
   try {
     const reviews = await getReviews();
@@ -56,11 +70,43 @@ app.post("/api/reviews", async (req, res) => {
   }
 });
 
-// Fallback for SPA: serve index.html for unknown routes
+// ---------- Payments API ----------
+app.get("/payments", async (req, res) => {
+  try {
+    const { transactionId } = req.query;
+    if (!transactionId) {
+      return res.status(400).json({ error: "Missing transactionId" });
+    }
+
+    const payments = await getPayments();
+    const match = payments.filter((p) => p.transactionId === transactionId);
+
+    res.json(match);
+  } catch (err) {
+    console.error("Error reading payments:", err);
+    res.status(500).json({ error: "Failed to fetch payments" });
+  }
+});
+
+app.post("/payments", async (req, res) => {
+  try {
+    const newPayment = req.body;
+    const payments = await getPayments();
+    payments.push(newPayment);
+    await savePayments(payments);
+    res.status(201).json(newPayment);
+  } catch (err) {
+    console.error("Error saving payment:", err);
+    res.status(500).json({ error: "Failed to save payment" });
+  }
+});
+
+// ---------- SPA Fallback ----------
 app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
+// ---------- Start Server ----------
 app.listen(PORT, () => {
   console.log(`🚀 Server is running at http://localhost:${PORT}`);
 });
