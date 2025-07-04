@@ -4,7 +4,7 @@ import TermsContent from './TermsContent';
 import PaymentPopup from './PaymentPopup';
 
 const PricingSection: React.FC = () => {
-  const [selectedPlan, setSelectedPlan] = useState('studio');
+  const [selectedPlan, setSelectedPlan] = useState('pro'); // Default to Pro Pack (4TB)
   const [email, setEmail] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -12,8 +12,8 @@ const PricingSection: React.FC = () => {
 
   const plans = [
     { id: 'standard', name: 'Standard Pack', storage: '1TB', originalPrice: null, price: '₹ 9,999', popular: false },
-    { id: 'studio', name: 'Studio Pack', storage: '2TB', originalPrice: '₹ 19,999', price: '₹ 18,999', popular: true },
-    { id: 'pro', name: 'Pro Pack', storage: '4TB', originalPrice: '₹ 39,999', price: '₹ 35,999', popular: false },
+    { id: 'studio', name: 'Studio Pack', storage: '2TB', originalPrice: '₹ 19,999', price: '₹ 18,999', popular: false },
+    { id: 'pro', name: 'Pro Pack', storage: '4TB', originalPrice: '₹ 39,999', price: '₹ 35,999', popular: true },
     { id: 'ultimate', name: 'Ultimate Pack', storage: '8TB', originalPrice: '₹ 79,999', price: '₹ 63,999', popular: false }
   ];
 

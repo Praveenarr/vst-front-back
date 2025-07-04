@@ -16,16 +16,18 @@ const ReviewsSection: React.FC = () => {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
 
-  const apiUrl = 'http://localhost:3500/api/reviews';
+  // ✅ Uses .env for local or live environment
+  const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/reviews`;
 
 
   useEffect(() => {
-    axios.get(apiUrl)
-      .then(response => setReviews(response.data))
-      .catch(error => console.error('Failed to fetch reviews:', error));
-  }, []);
+    axios
+      .get(apiUrl)
+      .then((response) => setReviews(response.data))
+      .catch((error) => console.error('Failed to fetch reviews:', error));
+  }, [apiUrl]);
 
-  const generateId = () => Math.random().toString(36).substr(2, 4);
+  const generateId = () => Math.random().toString(36).substr(2, 8);
 
   const handlePostReview = async () => {
     if (!reviewEmail.trim() || !reviewText.trim() || reviewRating === 0) {
@@ -35,44 +37,50 @@ const ReviewsSection: React.FC = () => {
 
     const newReview: Review = {
       id: generateId(),
-      email: reviewEmail,
-      text: reviewText,
+      email: reviewEmail.trim(),
+      text: reviewText.trim(),
       rating: reviewRating,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     try {
       const response = await axios.post(apiUrl, newReview);
-      setReviews(prev => [...prev, response.data]);
+      setReviews((prev) => [...prev, response.data]);
       setReviewEmail('');
       setReviewText('');
       setReviewRating(0);
     } catch (err) {
       console.error('Error posting review:', err);
+      alert('Failed to submit review. Please try again.');
     }
   };
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleString(); // E.g., 7/1/2025, 1:00 PM
+    return date.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-black via-gray-900 to-black">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 sm:mb-16">
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-  What Our <span className="text-yellow-400">Clients Say</span>
-</h2>
-
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            What Our <span className="text-yellow-400">Clients Say</span>
+          </h2>
           <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full" />
         </div>
 
         {/* Review Form */}
         <div className="max-w-2xl mx-auto mb-12 sm:mb-16">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl sm:rounded-2xl p-6 lg:p-8 shadow-2xl">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 lg:p-8 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 text-center">Share Your Experience</h3>
-
             <div className="space-y-6">
               <div>
                 <label className="block text-white text-sm font-semibold mb-2">
@@ -97,7 +105,6 @@ const ReviewsSection: React.FC = () => {
                 />
               </div>
 
-              {/* Star Rating Selection */}
               <div>
                 <label className="block text-white text-sm font-semibold mb-2">Rate our service:</label>
                 <div className="flex space-x-2">
@@ -126,9 +133,9 @@ const ReviewsSection: React.FC = () => {
 
         {/* Reviews Display */}
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-          {reviews.map((review, index) => (
+          {reviews.map((review) => (
             <div
-              key={review.id || index}
+              key={review.id}
               className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl hover:scale-105 transition-all duration-300 border border-gray-700 hover:border-yellow-400/30"
             >
               <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
@@ -139,7 +146,6 @@ const ReviewsSection: React.FC = () => {
                 </div>
 
                 <div className="flex-1">
-                  {/* Email and Rating - stacked on mobile */}
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 space-y-2 sm:space-y-0">
                     <h4 className="text-yellow-400 font-semibold text-lg break-words">
                       {review.email}
@@ -150,14 +156,8 @@ const ReviewsSection: React.FC = () => {
                       ))}
                     </div>
                   </div>
-
-                  {/* Review Text */}
                   <p className="text-gray-300 leading-relaxed">{review.text}</p>
-
-                  {/* Timestamp below text */}
-                  <p className="text-sm text-gray-400 mt-2">
-                    {formatTimestamp(review.timestamp)}
-                  </p>
+                  <p className="text-sm text-gray-400 mt-2">{formatTimestamp(review.timestamp)}</p>
                 </div>
               </div>
             </div>
